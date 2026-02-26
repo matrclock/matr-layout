@@ -14,6 +14,22 @@ export function buildScene() {
     height: 32,
     fill: '#1a1a2e',
     children: [
+      new Box({
+        fill: '#666666',
+      }),
+      new Box({
+        height: 10,
+        width: 10,
+        fill: '#cc6666',
+      }),
+      new Row({
+        fill: '#16213e',
+        children: [
+          new Text({ content: 'matr', color: '#e94560', font: 'Tiny5-Bold' }),
+          new Text({ content: '0.1', color: '#888888', align: 'end' }),
+        ],
+      }),
+      /*
       new Column({
         children: [
           // Header: 8px tall, two greedy text labels
@@ -58,6 +74,7 @@ export function buildScene() {
           // Footer
         ],
       }),
+      */
     ],
   });
 }

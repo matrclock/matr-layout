@@ -26,7 +26,19 @@ export function parseDim(value) {
 }
 
 export class Box {
+  static ownProps = new Set(['children', 'width', 'height', 'color', 'fill', 'align']);
+
   constructor(props = {}) {
+    const allowed = new Set();
+    let cls = this.constructor;
+    while (cls) {
+      if (cls.ownProps) for (const p of cls.ownProps) allowed.add(p);
+      cls = Object.getPrototypeOf(cls);
+    }
+    for (const key of Object.keys(props)) {
+      if (!allowed.has(key)) throw new Error(`${this.constructor.name}: unsupported prop "${key}"`);
+    }
+
     this.children = props.children ?? [];
 
     this.widthSpec = parseDim(props.width ?? this.defaultWidthSpec());

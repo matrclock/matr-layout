@@ -1,6 +1,8 @@
 import { Box } from './Box.js';
 
 export class Text extends Box {
+  static ownProps = new Set(['content', 'font']);
+
   constructor(props = {}) {
     super(props);
     this.content = props.content ?? '';

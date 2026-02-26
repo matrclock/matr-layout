@@ -11,9 +11,11 @@ function parsePad(p) {
 }
 
 export class Padding extends Box {
+  static ownProps = new Set(['child', 'padding']);
+
   constructor(props = {}) {
     const child = props.child ?? null;
-    super({ children: child ? [child] : [] });
+    super({ ...props, children: child ? [child] : [] });
     this.pad = parsePad(props.padding);
     this.padColor = props.color ?? null;
   }
