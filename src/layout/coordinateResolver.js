@@ -1,5 +1,6 @@
 import { Row } from '../core/Row.js';
 import { Column } from '../core/Column.js';
+import { Padding } from '../core/Padding.js';
 
 /**
  * Computes the starting offset for children based on alignment.
@@ -51,6 +52,13 @@ function positionChildren(box) {
         cursor += child.resolved.height;
       }
 
+      positionChildren(child);
+    }
+  } else if (box instanceof Padding) {
+    const { top, left } = box.pad;
+    for (const child of children) {
+      child.resolved.x = box.resolved.x + left;
+      child.resolved.y = box.resolved.y + top;
       positionChildren(child);
     }
   } else {

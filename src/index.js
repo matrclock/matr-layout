@@ -3,3 +3,4 @@ export { Root } from './core/Root.js';
 export { Row } from './core/Row.js';
 export { Column } from './core/Column.js';
 export { Text } from './core/Text.js';
+export { Padding } from './core/Padding.js';

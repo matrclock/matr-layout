@@ -1,6 +1,7 @@
 import { Row } from '../core/Row.js';
 import { Column } from '../core/Column.js';
 import { Text } from '../core/Text.js';
+import { Padding } from '../core/Padding.js';
 import { getFont, getFontCellHeight } from '../font/glyphFont.js';
 
 /**
@@ -30,6 +31,13 @@ export function resolveBox(box, availableWidth, availableHeight) {
     allocateChildren(box, box.resolved.width, box.resolved.height, 'horizontal');
   } else if (box instanceof Column) {
     allocateChildren(box, box.resolved.width, box.resolved.height, 'vertical');
+  } else if (box instanceof Padding) {
+    const { top, right, bottom, left } = box.pad;
+    const innerWidth = box.resolved.width - left - right;
+    const innerHeight = box.resolved.height - top - bottom;
+    for (const child of box.children) {
+      resolveBox(child, innerWidth, innerHeight);
+    }
   } else {
     // Generic box: children get full parent space, no stacking.
     for (const child of box.children) {

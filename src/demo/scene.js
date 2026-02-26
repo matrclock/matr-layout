@@ -3,6 +3,7 @@ import { Row } from '../core/Row.js';
 import { Column } from '../core/Column.js';
 import { Text } from '../core/Text.js';
 import { Box } from '../core/Box.js';
+import { Padding } from '../core/Padding.js';
 /**
  * Builds the demo scene for a 64×32 canvas (8×8 font → 8 chars wide, 4 rows tall).
  * @returns {Root}
@@ -26,21 +27,34 @@ export function buildScene() {
           }),
 
           // Body: greedy (16px) — red accent stripe + content
-          new Row({
-            height: 21,
-            children: [
-              new Box({ width: 1, height: '100%', fill: '#66cc66' }),
-              new Column({
-                children: [
-                  new Box({ height: 1, fill: '#cc6666' }),
-                  new Box({ height: 1  }),
-                  new Text({ content: 'Lays', height: 21, color: '#ffffff', font: 'profont22' }),
-                 //new Text({ content: '64x32', height: 12, color: '#ffffff', font: 'profont12' }),
-
-                ],
-              }),
-            ],
-          }),
+          new Padding({
+            padding: {
+              top: 1
+            },
+            color: '#66cc66',
+            child: new Row({
+              height: 21,
+              children: [
+                new Column({
+                  children: [
+                    new Padding({
+                      padding: {
+                        top: 1,
+                      },
+                      color: '#cc6666',
+                      child: new Column({
+                        align: 'center',
+                        children: [
+                          new Text({ align: 'center', height: 14, content: 'Hello', color: '#ffffff', font: 'profont17' }),
+                        ]
+                      })
+                    })
+                  ],
+                }),
+              ],
+            }),
+          })
+          
           // Footer
         ],
       }),

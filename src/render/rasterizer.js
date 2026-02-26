@@ -1,4 +1,5 @@
 import { Text } from '../core/Text.js';
+import { Padding } from '../core/Padding.js';
 import { getFont, getFontCellHeight, getTextWidth, layoutText, renderGlyph, parseColor } from '../font/glyphFont.js';
 
 function fillRect(buf, x, y, w, h, r, g, b, clip) {
@@ -39,6 +40,22 @@ function paint(box, buf, parentClip) {
   const clip = intersectClip(ownBounds, parentClip);
 
   if (clip.width <= 0 || clip.height <= 0) return;
+
+  if (box instanceof Padding) {
+    if (box.padColor !== null) {
+      const [pr, pg, pb] = parseColor(box.padColor);
+      const { top, right, bottom, left } = box.pad;
+      // Only fill the padding strips, not the inner content area.
+      if (top > 0)    fillRect(buf, x,                   y,                    width,         top,    pr, pg, pb, clip);
+      if (bottom > 0) fillRect(buf, x,                   y + height - bottom,  width,         bottom, pr, pg, pb, clip);
+      if (left > 0)   fillRect(buf, x,                   y + top,              left,          height - top - bottom, pr, pg, pb, clip);
+      if (right > 0)  fillRect(buf, x + width - right,   y + top,              right,         height - top - bottom, pr, pg, pb, clip);
+    }
+    for (const child of box.children) {
+      paint(child, buf, clip);
+    }
+    return;
+  }
 
   const [fr, fg, fb] = parseColor(fill);
   fillRect(buf, x, y, width, height, fr, fg, fb, clip);
