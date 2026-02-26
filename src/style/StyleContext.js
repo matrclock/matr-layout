@@ -1,10 +1,8 @@
 const DEFAULT_COLOR = '#FFFFFF';
-const DEFAULT_FILL = '#000000';
 
 export class StyleContext {
-  constructor(color = null, fill = null) {
+  constructor(color = null) {
     this.color = color;
-    this.fill = fill;
   }
 
   /**
@@ -16,7 +14,6 @@ export class StyleContext {
   extend(explicitStyles) {
     return new StyleContext(
       'color' in explicitStyles ? explicitStyles.color : this.color,
-      'fill' in explicitStyles ? explicitStyles.fill : this.fill,
     );
   }
 
@@ -31,10 +28,7 @@ export class StyleContext {
       ('color' in explicitStyles ? explicitStyles.color : null) ??
       this.color ??
       DEFAULT_COLOR;
-    const fill =
-      ('fill' in explicitStyles ? explicitStyles.fill : null) ??
-      this.fill ??
-      DEFAULT_FILL;
+    const fill = 'fill' in explicitStyles ? explicitStyles.fill : null;
     return { color, fill };
   }
 }

@@ -26,7 +26,7 @@ export function parseDim(value) {
 }
 
 export class Box {
-  static ownProps = new Set(['children', 'width', 'height', 'color', 'fill', 'align']);
+  static ownProps = new Set(['children', 'width', 'height', 'color', 'fill', 'align', 'top', 'left']);
 
   constructor(props = {}) {
     const allowed = new Set();
@@ -43,6 +43,8 @@ export class Box {
 
     this.widthSpec = parseDim(props.width ?? this.defaultWidthSpec());
     this.heightSpec = parseDim(props.height ?? this.defaultHeightSpec());
+    this.topSpec  = parseDim(props.top);
+    this.leftSpec = parseDim(props.left);
 
     // Only track styles that were explicitly provided by the caller.
     this._explicitStyles = {};
@@ -59,7 +61,7 @@ export class Box {
       width: 0,
       height: 0,
       color: '#FFFFFF',
-      fill: '#000000',
+      fill: null,
     };
   }
 

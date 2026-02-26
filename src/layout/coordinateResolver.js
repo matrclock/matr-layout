@@ -15,6 +15,21 @@ function alignmentOffset(align, available) {
   return 0; // 'start'
 }
 
+function applyExplicitPosition(child, parent) {
+  if (child.leftSpec && child.leftSpec.type !== 'neutral') {
+    const val = child.leftSpec.type === 'px'
+      ? child.leftSpec.value
+      : Math.floor((child.leftSpec.value / 100) * parent.resolved.width);
+    child.resolved.x = parent.resolved.x + val;
+  }
+  if (child.topSpec && child.topSpec.type !== 'neutral') {
+    const val = child.topSpec.type === 'px'
+      ? child.topSpec.value
+      : Math.floor((child.topSpec.value / 100) * parent.resolved.height);
+    child.resolved.y = parent.resolved.y + val;
+  }
+}
+
 /**
  * Positions a box's children using the resolved dimensions.
  * @param {import('../core/Box.js').Box} box
@@ -52,6 +67,7 @@ function positionChildren(box) {
         cursor += child.resolved.height;
       }
 
+      applyExplicitPosition(child, box);
       positionChildren(child);
     }
   } else if (box instanceof Padding) {
@@ -59,6 +75,7 @@ function positionChildren(box) {
     for (const child of children) {
       child.resolved.x = box.resolved.x + left;
       child.resolved.y = box.resolved.y + top;
+      applyExplicitPosition(child, box);
       positionChildren(child);
     }
   } else {
@@ -66,6 +83,7 @@ function positionChildren(box) {
     for (const child of children) {
       child.resolved.x = box.resolved.x;
       child.resolved.y = box.resolved.y;
+      applyExplicitPosition(child, box);
       positionChildren(child);
     }
   }

@@ -57,8 +57,10 @@ function paint(box, buf, parentClip) {
     return;
   }
 
-  const [fr, fg, fb] = parseColor(fill);
-  fillRect(buf, x, y, width, height, fr, fg, fb, clip);
+  if (fill !== null) {
+    const [fr, fg, fb] = parseColor(fill);
+    fillRect(buf, x, y, width, height, fr, fg, fb, clip);
+  }
 
   if (box instanceof Text && box.content.length > 0) {
     const [cr, cg, cb] = parseColor(color);
