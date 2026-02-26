@@ -27,14 +27,15 @@ export function buildScene() {
 
           // Body: greedy (16px) — red accent stripe + content
           new Row({
+            height: 21,
             children: [
               new Box({ width: 1, height: '100%', fill: '#66cc66' }),
               new Column({
                 children: [
                   new Box({ height: 1, fill: '#cc6666' }),
                   new Box({ height: 1  }),
-                  new Text({ content: 'LAYOUT', height: 10, color: '#ffffff', font: '5x7' }),
-                  new Text({ content: '64x32', height: 12, color: '#ffffff', font: 'profont12' }),
+                  new Text({ content: 'Lays', height: 21, color: '#ffffff', font: 'profont22' }),
+                 //new Text({ content: '64x32', height: 12, color: '#ffffff', font: 'profont12' }),
 
                 ],
               }),

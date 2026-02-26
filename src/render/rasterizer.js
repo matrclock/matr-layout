@@ -52,7 +52,7 @@ function paint(box, buf, parentClip) {
 
     let lineY = y;
     for (const line of lines) {
-      if (lineY + cellHeight > y + height) break;
+      if (lineY >= y + height) break;
 
       const lineWidth = getTextWidth(line, font);
       let charX;
