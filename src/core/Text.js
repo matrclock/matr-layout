@@ -4,6 +4,7 @@ export class Text extends Box {
   constructor(props = {}) {
     super(props);
     this.content = props.content ?? '';
+    this.fontName = props.font ?? 'Tiny5-Regular';
   }
 
   defaultWidthSpec() {

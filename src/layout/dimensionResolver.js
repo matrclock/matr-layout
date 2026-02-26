@@ -1,8 +1,7 @@
 import { Row } from '../core/Row.js';
 import { Column } from '../core/Column.js';
 import { Text } from '../core/Text.js';
-
-export const FONT_HEIGHT = 8;
+import { getFont, getFontCellHeight } from '../font/glyphFont.js';
 
 /**
  * Resolves dimensions for a single box given its allocated width and height.
@@ -18,9 +17,9 @@ export function resolveBox(box, availableWidth, availableHeight) {
 
   box.resolved.width = width;
 
-  // Text with neutral height → single-line, use font height.
+  // Text with neutral height → single-line, use font cell height.
   if (box instanceof Text && box.heightSpec.type === 'neutral') {
-    box.resolved.height = FONT_HEIGHT;
+    box.resolved.height = getFontCellHeight(getFont(box.fontName));
   } else {
     box.resolved.height = height;
   }

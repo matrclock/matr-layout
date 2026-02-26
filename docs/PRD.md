@@ -61,17 +61,26 @@ Alignment is an offset applied to the entire group of children after their sizes
 
 ## 4. Text Content Rules
 
-The **Text Box** uses fixed-height bitmap fonts. Logic toggles based on the `height` attribute:
+The **Text Box** renders bitmap glyphs from a JSON font. Logic toggles based on the `height` attribute:
 
 * **Single-Line (Height Undefined):**
-* Box Height = Font Height.
-* Text never wraps; it is **clipped on the right** edge.
-
+  * Box Height = font cell height (bitmap row count of the active font).
+  * Text never wraps; it is **clipped on the right** edge.
 
 * **Multi-Line (Height Defined):**
-* Text wraps at the Box Width boundary.
-* **Rule:** Never break a word. If a word exceeds the width, it moves to the next line.
-* The entire block is **clipped at the bottom** edge.
+  * Text wraps at the Box Width boundary using pixel-accurate widths.
+  * **Rule:** Never break a word. If a word exceeds the width, it moves to the next line.
+  * The entire block is **clipped at the bottom** edge.
+
+### **Font (`font` prop)**
+
+Selects the font by name. Defaults to `'Tiny5-Regular'`.
+
+```js
+new Text({ content: 'hi', font: 'Tiny5-Bold' })
+```
+
+Fonts must be registered before use via `registerFont(name, data)` from `src/font/glyphFont.js`. `Tiny5-Regular` is pre-registered automatically.
 
 ### **Text Alignment (`align` prop)**
 
@@ -83,7 +92,61 @@ Controls the horizontal position of each rendered text line within the Text box'
 | `center` | Text is centered within the box width. |
 | `end` | Text is flush with the right edge of the box. |
 
-The offset is computed as: `charX = x + (width - lineWidth) * factor`, where `lineWidth = chars * FONT_WIDTH`.
+The offset is computed as: `charX = x + (width - lineWidth) * factor`, where `lineWidth = getTextWidth(line, font)` (sum of per-glyph advance widths, no trailing gap).
+
+---
+
+## 6. Font System
+
+Fonts are stored as JSON files in `src/glyphs/`, converted from BDF sources. The active font is referenced by name on each `Text` box.
+
+### **Glyph JSON Format**
+
+Each file is a map from character to glyph descriptor:
+
+```json
+{
+  "A": {
+    "encoding": 65,
+    "width": 4,
+    "height": 5,
+    "xOffset": 0,
+    "yOffset": 0,
+    "bitmap": [
+      [0, 1, 1, 0],
+      [1, 0, 0, 1],
+      [1, 1, 1, 1],
+      [1, 0, 0, 1],
+      [1, 0, 0, 1]
+    ],
+    "char": "A"
+  }
+}
+```
+
+| Field | Meaning |
+| --- | --- |
+| `width` | Glyph advance width in pixels (character cell, not just ink) |
+| `height` | Bounding box height of the ink area |
+| `xOffset` / `yOffset` | Ink offset from the draw cursor |
+| `bitmap` | 2D array of `0`/`1` rows; **`bitmap.length` is the cell height** (used for line height) |
+
+### **Proportional Layout**
+
+Fonts are proportional — each character has its own `width`. The advance per character is `glyph.width + 1` (1 px gap). Total string width = `sum(advance for each char) − 1` (no trailing gap).
+
+### **Font Registry** (`src/font/glyphFont.js`)
+
+| Export | Purpose |
+| --- | --- |
+| `DEFAULT_FONT_NAME` | `'Tiny5-Regular'` |
+| `registerFont(name, data)` | Adds a font to the runtime registry |
+| `getFont(name)` | Looks up a registered font (throws if missing) |
+| `getFontCellHeight(font)` | Returns `bitmap.length` of the first glyph |
+| `getTextWidth(text, font)` | Pixel width of a string |
+| `layoutText(content, w, multi, font)` | Word-wrap → `string[]` |
+| `renderGlyph(buf, ch, x, y, r, g, b, clip, font)` | Draws one glyph, returns advance |
+| `parseColor(hex)` | `'#RRGGBB'` → `[r, g, b]` |
 
 
 

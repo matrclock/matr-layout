@@ -1,5 +1,5 @@
 import { Text } from '../core/Text.js';
-import { renderGlyph, parseColor, layoutText, FONT_WIDTH, FONT_HEIGHT } from '../font/font8x8.js';
+import { getFont, getFontCellHeight, getTextWidth, layoutText, renderGlyph, parseColor } from '../font/glyphFont.js';
 
 function fillRect(buf, x, y, w, h, r, g, b, clip) {
   const { width, height, data } = buf;
@@ -45,14 +45,16 @@ function paint(box, buf, parentClip) {
 
   if (box instanceof Text && box.content.length > 0) {
     const [cr, cg, cb] = parseColor(color);
+    const font = getFont(box.fontName);
+    const cellHeight = getFontCellHeight(font);
     const isMultiLine = box.heightSpec.type !== 'neutral';
-    const lines = layoutText(box.content, width, isMultiLine);
+    const lines = layoutText(box.content, width, isMultiLine, font);
 
     let lineY = y;
     for (const line of lines) {
-      if (lineY + FONT_HEIGHT > y + height) break;
+      if (lineY + cellHeight > y + height) break;
 
-      const lineWidth = line.length * FONT_WIDTH;
+      const lineWidth = getTextWidth(line, font);
       let charX;
       if (box.align === 'end') {
         charX = x + width - lineWidth;
@@ -61,12 +63,11 @@ function paint(box, buf, parentClip) {
       } else {
         charX = x;
       }
-      for (let i = 0; i < line.length; i++) {
-        renderGlyph(buf, line.charCodeAt(i), charX, lineY, cr, cg, cb, clip);
-        charX += FONT_WIDTH;
+      for (const ch of line) {
+        charX += renderGlyph(buf, ch, charX, lineY, cr, cg, cb, clip, font);
       }
 
-      lineY += FONT_HEIGHT;
+      lineY += cellHeight;
     }
   }
 

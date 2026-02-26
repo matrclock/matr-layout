@@ -20,7 +20,7 @@ export function buildScene() {
             height: 8,
             fill: '#16213e',
             children: [
-              new Text({ content: 'matr', color: '#e94560' }),
+              new Text({ content: 'matr', color: '#e94560', font: 'Tiny5-Bold' }),
               new Text({ content: '0.1', color: '#888888', align: 'end' }),
             ],
           }),
@@ -32,9 +32,9 @@ export function buildScene() {
               new Column({
                 children: [
                   new Box({ height: 1, fill: '#cc6666' }),
-                  new Box({ height: 2  }),
-                  new Text({ content: 'layout', height: 10, color: '#ffffff' }),
-                  new Text({ content: '64x32', color: '#ffffff' }),
+                  new Box({ height: 1  }),
+                  new Text({ content: 'LAYOUT', height: 10, color: '#ffffff', font: '5x7' }),
+                  new Text({ content: '64x32', height: 12, color: '#ffffff', font: 'profont12' }),
 
                 ],
               }),
