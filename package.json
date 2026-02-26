@@ -1,0 +1,13 @@
+{
+  "name": "matr-layout",
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "node server/devServer.js",
+    "clidev": "node --watch server/cliDev.js",
+    "lint": "eslint src/ server/ --ext .js"
+  },
+  "devDependencies": {
+    "eslint": "^9.0.0"
+  }
+}

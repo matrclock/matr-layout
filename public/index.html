@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>matr-layout</title>
+  <style>
+    body {
+      margin: 0;
+      background: #111;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+    }
+    canvas {
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="screen"></canvas>
+
+  <script type="module">
+    import { Root, Row, Column, Text, Box } from '/src/index.js';
+    import { resolveStyles } from '/src/style/StyleContext.js';
+    import { resolveTree } from '/src/layout/dimensionResolver.js';
+    import { positionTree } from '/src/layout/coordinateResolver.js';
+    import { renderTree } from '/src/render/canvasRenderer.js';
+    import { buildScene } from '/src/demo/scene.js';
+
+    const canvas = document.getElementById('screen');
+
+    function render() {
+      const root = buildScene();
+      resolveStyles(root);
+      resolveTree(root);
+      positionTree(root);
+      renderTree(root, canvas);
+    }
+
+    render();
+  </script>
+
+  <script>
+    const es = new EventSource('/events');
+    es.onmessage = () => location.reload();
+  </script>
+</body>
+</html>
