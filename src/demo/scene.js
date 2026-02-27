@@ -5,6 +5,8 @@ import { Text } from '../../src/core/Text.js';
 import { Box } from '../../src/core/Box.js';
 import { Animation } from '../../src/core/Animation.js';
 import { Padding } from '../../src/core/Padding.js';
+import { Slide } from '../../src/core/Slide.js';
+import { Deck } from '../../src/core/Deck.js';
 
 const CANVAS_W = 64;
 const CANVAS_H = 32;
@@ -83,22 +85,62 @@ export function buildScene() {
     height: CANVAS_H,
     fill: '#000000',
     children: [
-      new Column({
+      new Deck({
         children: [
-          new Row({
-            height: HEADER_H,
-            children: [
-              new Text({ font: 'Tiny5-Bold', content: 'matr', color: '#ffffff' }),
-              new Text({ align: 'end', content: 'v0.0.1', color: '#ffffff' }),
-            ],
+          new Slide({
+            duration: FRAME_COUNT * FRAME_MS,
+            transition: { type: 'slideLeft', duration: 500 },
+            child: new Column({
+              children: [
+                new Row({
+                  height: HEADER_H,
+                  children: [
+                    new Text({ font: 'Tiny5-Bold', content: 'matr', color: '#ffffff' }),
+                    new Text({ align: 'end', content: 'v0.0.1', color: '#ffffff' }),
+                  ],
+                }),
+                new Box({
+                  height: SEP_H,
+                  fill: '#ff0000',
+                }),
+                new Animation({
+                  duration: FRAME_MS,
+                  children: buildBouncingFrames(),
+                }),
+              ],
+            }),
           }),
-          new Box({
-            height: SEP_H,
-            fill: '#ff0000',
+          new Slide({
+            duration: 2000,
+            transition: { type: 'slideLeft', duration: 500 },
+            child: new Column({
+              children: [
+                new Row({
+                  height: HEADER_H,
+                  children: [
+                    new Text({ font: 'Tiny5-Bold', content: 'deck', color: '#00ffcc' }),
+                    new Text({ align: 'end', content: 'slide 2', color: '#888888' }),
+                  ],
+                }),
+                new Box({
+                  height: SEP_H,
+                  fill: '#00ffcc',
+                }),
+                new Box({ fill: '#001a14' }),
+              ],
+            }),
           }),
-          new Animation({
-            duration: FRAME_MS,
-            children: buildBouncingFrames(),
+          new Slide({
+            duration: 3000,
+            child: new Box({ fill: '#1a0a00', children: [
+              new Text({
+                width: CANVAS_W,
+                height: CANVAS_H,
+                align: 'center',
+                color: '#FF7F32',
+                content: 'slide 3',
+              }),
+            ]}),
           }),
         ],
       }),
