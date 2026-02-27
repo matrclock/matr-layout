@@ -140,13 +140,20 @@ export function rasterizeFrames(root) {
     return { frames: [rasterize(root)], durations: [] };
   }
 
-  const anim = animations[0];
-  const count = anim.children.length;
+  const masterDuration = Math.min(...animations.map(a => Math.min(...a.durations)));
+  const primary = animations[0];
+  const totalDuration = primary.children.length * primary.durations[0];
+  const frameCount = Math.round(totalDuration / masterDuration);
+
   const frames = [];
-  for (let i = 0; i < count; i++) {
-    anim.activeFrame = i;
+  for (let i = 0; i < frameCount; i++) {
+    const t = i * masterDuration;
+    for (const anim of animations) {
+      anim.activeFrame = Math.floor(t / anim.durations[0]) % anim.children.length;
+    }
     frames.push(rasterize(root));
   }
-  anim.activeFrame = 0;
-  return { frames, durations: anim.durations };
+
+  for (const anim of animations) anim.activeFrame = 0;
+  return { frames, durations: Array(frameCount).fill(masterDuration) };
 }
