@@ -7,15 +7,13 @@ function toHex(r, g, b) {
 }
 
 /**
- * Renders the entire box tree onto an HTML Canvas element with round pixels.
- * Each logical pixel is drawn as a filled circle at SCALE× magnification.
- * @param {import('../core/Box.js').Box} root
+ * Renders a pre-rasterized RGBA buffer onto an HTML Canvas element.
+ * @param {Uint8Array} buf
+ * @param {number} width
+ * @param {number} height
  * @param {HTMLCanvasElement} canvas
  */
-export function renderTree(root, canvas) {
-  const { width, height } = root.resolved;
-  const pixels = rasterize(root);
-
+export function renderBuffer(buf, width, height, canvas) {
   canvas.width = width * SCALE;
   canvas.height = height * SCALE;
 
@@ -27,11 +25,22 @@ export function renderTree(root, canvas) {
   for (let py = 0; py < height; py++) {
     for (let px = 0; px < width; px++) {
       const i = (py * width + px) * 4;
-      if (pixels[i + 3] === 0) continue;
-      ctx.fillStyle = toHex(pixels[i], pixels[i + 1], pixels[i + 2]);
+      if (buf[i + 3] === 0) continue;
+      ctx.fillStyle = toHex(buf[i], buf[i + 1], buf[i + 2]);
       ctx.beginPath();
       ctx.arc(px * SCALE + radius, py * SCALE + radius, radius, 0, Math.PI * 2);
       ctx.fill();
     }
   }
+}
+
+/**
+ * Renders the entire box tree onto an HTML Canvas element with round pixels.
+ * Each logical pixel is drawn as a filled circle at SCALE× magnification.
+ * @param {import('../core/Box.js').Box} root
+ * @param {HTMLCanvasElement} canvas
+ */
+export function renderTree(root, canvas) {
+  const { width, height } = root.resolved;
+  renderBuffer(rasterize(root), width, height, canvas);
 }

@@ -4,6 +4,7 @@ import { Column } from '../core/Column.js';
 import { Text } from '../core/Text.js';
 import { Box } from '../core/Box.js';
 import { Padding } from '../core/Padding.js';
+import { Animation } from '../core/Animation.js';
 /**
  * Builds the demo scene for a 64×32 canvas (8×8 font → 8 chars wide, 4 rows tall).
  * @returns {Root}
@@ -12,38 +13,15 @@ export function buildScene() {
   return new Root({
     width: 64,
     height: 32,
-    fill: '#1a1a2e',
+    fill: '#000000',
     children: [
-      new Box({
-        height: 16,
-        width: 16,
-        fill: '#666666',
-      }),
-      new Box({
-        height: 10,
-        width: 10,
-        top: 5, left: 12,
-        fill: '#cc6666',
-      }),
-      new Padding({
-        padding: 2,
-        width: 30,
-        height: 12,
-        top: 10, left: 10,
-        color: '#66cc66',
-        child: new Box({
-          height: 12,
-          width: 8,
-          top: 5, left: 12,
-          fill: '#cc66cc',
-        }),
-      }),
-      new Text({
-        content: 'Hello',
-        color: '#ffffff',
-        font: 'profont17',
-        top: 10, left: 0,
-        width: 16,
+      new Animation({
+        duration: 1000,
+        children: [
+          new Box({ fill: '#ff0000' }),
+          new Box({ fill: '#00ff00' }),
+          new Box({ fill: '#0000ff' }),
+        ],
       }),
       /*
       new Row({

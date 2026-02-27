@@ -1,5 +1,6 @@
 import { Text } from '../core/Text.js';
 import { Padding } from '../core/Padding.js';
+import { Animation } from '../core/Animation.js';
 import { getFont, getFontCellHeight, getTextWidth, layoutText, renderGlyph, parseColor } from '../font/glyphFont.js';
 
 function fillRect(buf, x, y, w, h, r, g, b, clip) {
@@ -40,6 +41,12 @@ function paint(box, buf, parentClip) {
   const clip = intersectClip(ownBounds, parentClip);
 
   if (clip.width <= 0 || clip.height <= 0) return;
+
+  if (box instanceof Animation) {
+    const frame = box.children[box.activeFrame % Math.max(1, box.children.length)];
+    if (frame) paint(frame, buf, clip);
+    return;
+  }
 
   if (box instanceof Padding) {
     if (box.padColor !== null) {
@@ -109,4 +116,37 @@ export function rasterize(root) {
   };
   paint(root, buf, { x: 0, y: 0, width, height });
   return buf.data;
+}
+
+function collectAnimations(root) {
+  const list = [];
+  function walk(box) {
+    if (box instanceof Animation) list.push(box);
+    for (const child of box.children) walk(child);
+  }
+  walk(root);
+  return list;
+}
+
+/**
+ * Produces one raster per animation frame.
+ * Returns a single-frame result if no Animation nodes are present.
+ * @param {import('../core/Box.js').Box} root
+ * @returns {{ frames: Uint8Array[], durations: number[] }}
+ */
+export function rasterizeFrames(root) {
+  const animations = collectAnimations(root);
+  if (animations.length === 0) {
+    return { frames: [rasterize(root)], durations: [] };
+  }
+
+  const anim = animations[0];
+  const count = anim.children.length;
+  const frames = [];
+  for (let i = 0; i < count; i++) {
+    anim.activeFrame = i;
+    frames.push(rasterize(root));
+  }
+  anim.activeFrame = 0;
+  return { frames, durations: anim.durations };
 }

@@ -22,21 +22,43 @@
   <canvas id="screen"></canvas>
 
   <script type="module">
-    import { Root, Row, Column, Text, Box } from '/src/index.js';
     import { resolveStyles } from '/src/style/StyleContext.js';
     import { resolveTree } from '/src/layout/dimensionResolver.js';
     import { positionTree } from '/src/layout/coordinateResolver.js';
-    import { renderTree } from '/src/render/canvasRenderer.js';
+    import { rasterizeFrames } from '/src/render/rasterizer.js';
+    import { renderBuffer } from '/src/render/canvasRenderer.js';
     import { buildScene } from '/src/demo/scene.js';
 
     const canvas = document.getElementById('screen');
+    let animTimeout = null;
 
     function render() {
+      if (animTimeout !== null) {
+        clearTimeout(animTimeout);
+        animTimeout = null;
+      }
+
       const root = buildScene();
       resolveStyles(root);
       resolveTree(root);
       positionTree(root);
-      renderTree(root, canvas);
+
+      const { width, height } = root.resolved;
+      const { frames, durations } = rasterizeFrames(root);
+
+      renderBuffer(frames[0], width, height, canvas);
+
+      if (frames.length > 1) {
+        let i = 0;
+        function schedule() {
+          animTimeout = setTimeout(() => {
+            i = (i + 1) % frames.length;
+            renderBuffer(frames[i], width, height, canvas);
+            schedule();
+          }, durations[i]);
+        }
+        schedule();
+      }
     }
 
     render();
