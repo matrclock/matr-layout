@@ -11,6 +11,7 @@ const MIME_TYPES = {
   '.js': 'application/javascript',
   '.css': 'text/css',
   '.png': 'image/png',
+  '.json': 'application/json',
 };
 
 /** Active SSE response objects waiting for reload events. */

@@ -1,53 +1,95 @@
-import { createRequire } from 'module';
-
-const require = createRequire(import.meta.url);
+import _10x20           from '../glyphs/10x20.json'            with { type: 'json' };
+import _4x6             from '../glyphs/4x6.json'              with { type: 'json' };
+import _5x7             from '../glyphs/5x7.json'              with { type: 'json' };
+import _5x8             from '../glyphs/5x8.json'              with { type: 'json' };
+import _6x10            from '../glyphs/6x10.json'             with { type: 'json' };
+import _6x10_rounded    from '../glyphs/6x10-rounded.json'     with { type: 'json' };
+import _6x12            from '../glyphs/6x12.json'             with { type: 'json' };
+import _6x13            from '../glyphs/6x13.json'             with { type: 'json' };
+import _6x13B           from '../glyphs/6x13B.json'            with { type: 'json' };
+import _6x13O           from '../glyphs/6x13O.json'            with { type: 'json' };
+import _6x9             from '../glyphs/6x9.json'              with { type: 'json' };
+import _7Segments_26x42 from '../glyphs/7Segments_26x42.json'  with { type: 'json' };
+import _7x13            from '../glyphs/7x13.json'             with { type: 'json' };
+import _7x13B           from '../glyphs/7x13B.json'            with { type: 'json' };
+import _7x13O           from '../glyphs/7x13O.json'            with { type: 'json' };
+import _7x14            from '../glyphs/7x14.json'             with { type: 'json' };
+import _7x14B           from '../glyphs/7x14B.json'            with { type: 'json' };
+import _8x13            from '../glyphs/8x13.json'             with { type: 'json' };
+import _8x13B           from '../glyphs/8x13B.json'            with { type: 'json' };
+import _8x13O           from '../glyphs/8x13O.json'            with { type: 'json' };
+import _9x15            from '../glyphs/9x15.json'             with { type: 'json' };
+import _9x15B           from '../glyphs/9x15B.json'            with { type: 'json' };
+import _9x18            from '../glyphs/9x18.json'             with { type: 'json' };
+import _9x18B           from '../glyphs/9x18B.json'            with { type: 'json' };
+import CG_pixel_3x5_mono from '../glyphs/CG-pixel-3x5-mono.json' with { type: 'json' };
+import CG_pixel_4x5_mono from '../glyphs/CG-pixel-4x5-mono.json' with { type: 'json' };
+import Dina_r400_6      from '../glyphs/Dina_r400-6.json'      with { type: 'json' };
+import profont10        from '../glyphs/profont10.json'         with { type: 'json' };
+import profont11        from '../glyphs/profont11.json'         with { type: 'json' };
+import profont12        from '../glyphs/profont12.json'         with { type: 'json' };
+import profont15        from '../glyphs/profont15.json'         with { type: 'json' };
+import profont17        from '../glyphs/profont17.json'         with { type: 'json' };
+import profont22        from '../glyphs/profont22.json'         with { type: 'json' };
+import profont29        from '../glyphs/profont29.json'         with { type: 'json' };
+import spleen_5x8       from '../glyphs/spleen-5x8.json'       with { type: 'json' };
+import spleen_6x12      from '../glyphs/spleen-6x12.json'      with { type: 'json' };
+import spleen_8x16      from '../glyphs/spleen-8x16.json'      with { type: 'json' };
+import spleen_12x24     from '../glyphs/spleen-12x24.json'     with { type: 'json' };
+import spleen_16x32     from '../glyphs/spleen-16x32.json'     with { type: 'json' };
+import spleen_32x64     from '../glyphs/spleen-32x64.json'     with { type: 'json' };
+import streamline_all   from '../glyphs/streamline_all.json'   with { type: 'json' };
+import tb_8             from '../glyphs/tb-8.json'             with { type: 'json' };
+import Tiny5_Bold       from '../glyphs/Tiny5-Bold.json'       with { type: 'json' };
+import Tiny5_Regular    from '../glyphs/Tiny5-Regular.json'    with { type: 'json' };
+import tom_thumb        from '../glyphs/tom-thumb.json'        with { type: 'json' };
 
 const FONT_REGISTRY = new Map([
-  ['10x20',             require('../glyphs/10x20.json')],
-  ['4x6',               require('../glyphs/4x6.json')],
-  ['5x7',               require('../glyphs/5x7.json')],
-  ['5x8',               require('../glyphs/5x8.json')],
-  ['6x10',              require('../glyphs/6x10.json')],
-  ['6x10-rounded',      require('../glyphs/6x10-rounded.json')],
-  ['6x12',              require('../glyphs/6x12.json')],
-  ['6x13',              require('../glyphs/6x13.json')],
-  ['6x13B',             require('../glyphs/6x13B.json')],
-  ['6x13O',             require('../glyphs/6x13O.json')],
-  ['6x9',               require('../glyphs/6x9.json')],
-  ['7Segments_26x42',   require('../glyphs/7Segments_26x42.json')],
-  ['7x13',              require('../glyphs/7x13.json')],
-  ['7x13B',             require('../glyphs/7x13B.json')],
-  ['7x13O',             require('../glyphs/7x13O.json')],
-  ['7x14',              require('../glyphs/7x14.json')],
-  ['7x14B',             require('../glyphs/7x14B.json')],
-  ['8x13',              require('../glyphs/8x13.json')],
-  ['8x13B',             require('../glyphs/8x13B.json')],
-  ['8x13O',             require('../glyphs/8x13O.json')],
-  ['9x15',              require('../glyphs/9x15.json')],
-  ['9x15B',             require('../glyphs/9x15B.json')],
-  ['9x18',              require('../glyphs/9x18.json')],
-  ['9x18B',             require('../glyphs/9x18B.json')],
-  ['CG-pixel-3x5-mono', require('../glyphs/CG-pixel-3x5-mono.json')],
-  ['CG-pixel-4x5-mono', require('../glyphs/CG-pixel-4x5-mono.json')],
-  ['Dina_r400-6',       require('../glyphs/Dina_r400-6.json')],
-  ['profont10',         require('../glyphs/profont10.json')],
-  ['profont11',         require('../glyphs/profont11.json')],
-  ['profont12',         require('../glyphs/profont12.json')],
-  ['profont15',         require('../glyphs/profont15.json')],
-  ['profont17',         require('../glyphs/profont17.json')],
-  ['profont22',         require('../glyphs/profont22.json')],
-  ['profont29',         require('../glyphs/profont29.json')],
-  ['spleen-5x8',        require('../glyphs/spleen-5x8.json')],
-  ['spleen-6x12',       require('../glyphs/spleen-6x12.json')],
-  ['spleen-8x16',       require('../glyphs/spleen-8x16.json')],
-  ['spleen-12x24',      require('../glyphs/spleen-12x24.json')],
-  ['spleen-16x32',      require('../glyphs/spleen-16x32.json')],
-  ['spleen-32x64',      require('../glyphs/spleen-32x64.json')],
-  ['streamline_all',    require('../glyphs/streamline_all.json')],
-  ['tb-8',              require('../glyphs/tb-8.json')],
-  ['Tiny5-Bold',        require('../glyphs/Tiny5-Bold.json')],
-  ['Tiny5-Regular',     require('../glyphs/Tiny5-Regular.json')],
-  ['tom-thumb',         require('../glyphs/tom-thumb.json')],
+  ['10x20',             _10x20],
+  ['4x6',               _4x6],
+  ['5x7',               _5x7],
+  ['5x8',               _5x8],
+  ['6x10',              _6x10],
+  ['6x10-rounded',      _6x10_rounded],
+  ['6x12',              _6x12],
+  ['6x13',              _6x13],
+  ['6x13B',             _6x13B],
+  ['6x13O',             _6x13O],
+  ['6x9',               _6x9],
+  ['7Segments_26x42',   _7Segments_26x42],
+  ['7x13',              _7x13],
+  ['7x13B',             _7x13B],
+  ['7x13O',             _7x13O],
+  ['7x14',              _7x14],
+  ['7x14B',             _7x14B],
+  ['8x13',              _8x13],
+  ['8x13B',             _8x13B],
+  ['8x13O',             _8x13O],
+  ['9x15',              _9x15],
+  ['9x15B',             _9x15B],
+  ['9x18',              _9x18],
+  ['9x18B',             _9x18B],
+  ['CG-pixel-3x5-mono', CG_pixel_3x5_mono],
+  ['CG-pixel-4x5-mono', CG_pixel_4x5_mono],
+  ['Dina_r400-6',       Dina_r400_6],
+  ['profont10',         profont10],
+  ['profont11',         profont11],
+  ['profont12',         profont12],
+  ['profont15',         profont15],
+  ['profont17',         profont17],
+  ['profont22',         profont22],
+  ['profont29',         profont29],
+  ['spleen-5x8',        spleen_5x8],
+  ['spleen-6x12',       spleen_6x12],
+  ['spleen-8x16',       spleen_8x16],
+  ['spleen-12x24',      spleen_12x24],
+  ['spleen-16x32',      spleen_16x32],
+  ['spleen-32x64',      spleen_32x64],
+  ['streamline_all',    streamline_all],
+  ['tb-8',              tb_8],
+  ['Tiny5-Bold',        Tiny5_Bold],
+  ['Tiny5-Regular',     Tiny5_Regular],
+  ['tom-thumb',         tom_thumb],
 ]);
 
 export const DEFAULT_FONT_NAME = 'Tiny5-Regular';
