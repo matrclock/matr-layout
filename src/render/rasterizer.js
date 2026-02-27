@@ -1,6 +1,7 @@
 import { Text } from '../core/Text.js';
 import { Padding } from '../core/Padding.js';
 import { Animation } from '../core/Animation.js';
+import { Raster } from '../core/Raster.js';
 import { getFont, getFontCellHeight, getTextWidth, layoutText, renderGlyph, parseColor } from '../font/glyphFont.js';
 
 function fillRect(buf, x, y, w, h, r, g, b, clip) {
@@ -60,6 +61,21 @@ function paint(box, buf, parentClip) {
     }
     for (const child of box.children) {
       paint(child, buf, clip);
+    }
+    return;
+  }
+
+  if (box instanceof Raster && box.pixels !== null) {
+    const { x, y } = box.resolved;
+    for (let row = 0; row < box.pixels.length; row++) {
+      const rowData = box.pixels[row];
+      if (rowData == null) continue;
+      for (let col = 0; col < rowData.length; col++) {
+        const hex = rowData[col];
+        if (hex == null) continue;
+        const [r, g, b] = parseColor(hex);
+        fillRect(buf, x + col, y + row, 1, 1, r, g, b, clip);
+      }
     }
     return;
   }

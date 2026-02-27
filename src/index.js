@@ -5,3 +5,4 @@ export { Column } from './core/Column.js';
 export { Text } from './core/Text.js';
 export { Padding } from './core/Padding.js';
 export { Animation } from './core/Animation.js';
+export { Raster } from './core/Raster.js';
