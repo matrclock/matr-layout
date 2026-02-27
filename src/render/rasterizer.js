@@ -4,6 +4,9 @@ import { Animation } from '../core/Animation.js';
 import { Deck } from '../core/Deck.js';
 import { Raster } from '../core/Raster.js';
 import { getFont, getFontCellHeight, getTextWidth, layoutText, renderGlyph, parseColor } from '../font/glyphFont.js';
+import { resolveBox } from '../layout/dimensionResolver.js';
+import { resolveStyles, StyleContext } from '../style/StyleContext.js';
+import { positionTree } from '../layout/coordinateResolver.js';
 
 function fillRect(buf, x, y, w, h, r, g, b, clip) {
   const { width, height, data } = buf;
@@ -36,15 +39,16 @@ function intersectClip(a, b) {
   };
 }
 
-// Blit a width×height pixel Uint8Array (src) into another (dst) with horizontal offset slideX.
-// dst pixel at column cx comes from src pixel at (cx - slideX).
-function blitAt(src, dst, width, height, slideX) {
-  const left = Math.max(0, slideX);
-  const right = Math.min(width, slideX + width);
+// Blit src into dst with pixel offsets (offsetX, offsetY).
+// dst pixel at (cx, cy) samples src at (cx - offsetX, cy - offsetY).
+function blitOffset(src, dst, width, height, offsetX, offsetY) {
   for (let cy = 0; cy < height; cy++) {
-    for (let cx = left; cx < right; cx++) {
-      const srcX = cx - slideX;
-      const si = (cy * width + srcX) * 4;
+    const srcY = cy - offsetY;
+    if (srcY < 0 || srcY >= height) continue;
+    for (let cx = 0; cx < width; cx++) {
+      const srcX = cx - offsetX;
+      if (srcX < 0 || srcX >= width) continue;
+      const si = (srcY * width + srcX) * 4;
       const di = (cy * width + cx) * 4;
       dst[di]     = src[si];
       dst[di + 1] = src[si + 1];
@@ -52,6 +56,38 @@ function blitAt(src, dst, width, height, slideX) {
       dst[di + 3] = src[si + 3];
     }
   }
+}
+
+// Simple integer hash for dissolve/checkerboard determinism.
+function pixelHash(x, y) {
+  let h = (Math.imul(x, 1664525) + Math.imul(y, 1013904223)) | 0;
+  h ^= h >>> 16;
+  h = Math.imul(h, 0x45d9f3b);
+  h ^= h >>> 16;
+  return (h >>> 0) / 0x100000000;
+}
+
+// Ray-cast point-in-polygon for a 5-pointed star centered at (cx, cy) with given outerR.
+function pointInStar5(px, py, cx, cy, outerR) {
+  if (outerR <= 0) return false;
+  const innerR = outerR * 0.4;
+  let inside = false;
+  let j = 9;
+  for (let i = 0; i < 10; i++) {
+    const aI = (i * Math.PI / 5) - Math.PI / 2;
+    const rI = i % 2 === 0 ? outerR : innerR;
+    const xi = cx + rI * Math.cos(aI);
+    const yi = cy + rI * Math.sin(aI);
+    const aJ = (j * Math.PI / 5) - Math.PI / 2;
+    const rJ = j % 2 === 0 ? outerR : innerR;
+    const xj = cx + rJ * Math.cos(aJ);
+    const yj = cy + rJ * Math.sin(aJ);
+    if (((yi > py) !== (yj > py)) && (px < (xj - xi) * (py - yi) / (yj - yi) + xi)) {
+      inside = !inside;
+    }
+    j = i;
+  }
+  return inside;
 }
 
 function paint(box, buf, parentClip) {
@@ -259,34 +295,204 @@ function rasterizeSlideContent(slide, root, masterDuration) {
   return { frames, durations: Array(frameCount).fill(masterDuration) };
 }
 
+// Resolve and rasterize a standalone box (e.g. transition.from) into a pixel buffer.
+// The box is resolved as if it fills the full canvas, then painted over rootFill.
+function rasterizeBoxToFrame(box, width, height, rootFill) {
+  const clip = { x: 0, y: 0, width, height };
+  const buf = { data: new Uint8Array(width * height * 4), width, height };
+  if (rootFill) {
+    const [r, g, b] = parseColor(rootFill);
+    fillRect(buf, 0, 0, width, height, r, g, b, clip);
+  }
+  resolveBox(box, width, height);
+  resolveStyles(box, new StyleContext());
+  positionTree(box);
+  paint(box, buf, clip);
+  return buf.data;
+}
+
 // Build transition frames between fromFrame and toFrame.
 function generateTransitionFrames(transition, fromFrame, toFrame, width, height, masterDuration) {
   const frameCount = Math.max(1, Math.round(transition.duration / masterDuration));
   const frames = [];
+  const type = transition.type;
+
   for (let i = 0; i < frameCount; i++) {
     const p = (i + 1) / frameCount; // 0 < p <= 1
     const buf = new Uint8Array(width * height * 4);
-    if (transition.type === 'slideLeft') {
-      const offset = Math.round(p * width);
-      blitAt(fromFrame, buf, width, height, -offset);
-      blitAt(toFrame, buf, width, height, width - offset);
-    } else if (transition.type === 'fade') {
+
+    if (type === 'fade') {
       for (let j = 0; j < buf.length; j += 4) {
         buf[j]     = Math.round(fromFrame[j]     * (1 - p) + toFrame[j]     * p);
         buf[j + 1] = Math.round(fromFrame[j + 1] * (1 - p) + toFrame[j + 1] * p);
         buf[j + 2] = Math.round(fromFrame[j + 2] * (1 - p) + toFrame[j + 2] * p);
         buf[j + 3] = 255;
       }
+    } else if (type === 'slideLeft') {
+      const offset = Math.round(p * width);
+      blitOffset(fromFrame, buf, width, height, -offset, 0);
+      blitOffset(toFrame,   buf, width, height, width - offset, 0);
+    } else if (type === 'slideRight') {
+      const offset = Math.round(p * width);
+      blitOffset(fromFrame, buf, width, height, offset, 0);
+      blitOffset(toFrame,   buf, width, height, offset - width, 0);
+    } else if (type === 'slideUp') {
+      const offset = Math.round(p * height);
+      blitOffset(fromFrame, buf, width, height, 0, -offset);
+      blitOffset(toFrame,   buf, width, height, 0, height - offset);
+    } else if (type === 'slideDown') {
+      const offset = Math.round(p * height);
+      blitOffset(fromFrame, buf, width, height, 0, offset);
+      blitOffset(toFrame,   buf, width, height, 0, offset - height);
+    } else if (type === 'wipeRight') {
+      const boundary = Math.round(p * width);
+      for (let py = 0; py < height; py++) {
+        for (let px = 0; px < width; px++) {
+          const idx = (py * width + px) * 4;
+          const src = px < boundary ? toFrame : fromFrame;
+          buf[idx] = src[idx]; buf[idx+1] = src[idx+1]; buf[idx+2] = src[idx+2]; buf[idx+3] = 255;
+        }
+      }
+    } else if (type === 'wipeLeft') {
+      const boundary = Math.round((1 - p) * width);
+      for (let py = 0; py < height; py++) {
+        for (let px = 0; px < width; px++) {
+          const idx = (py * width + px) * 4;
+          const src = px >= boundary ? toFrame : fromFrame;
+          buf[idx] = src[idx]; buf[idx+1] = src[idx+1]; buf[idx+2] = src[idx+2]; buf[idx+3] = 255;
+        }
+      }
+    } else if (type === 'wipeDown') {
+      const boundary = Math.round(p * height);
+      for (let py = 0; py < height; py++) {
+        for (let px = 0; px < width; px++) {
+          const idx = (py * width + px) * 4;
+          const src = py < boundary ? toFrame : fromFrame;
+          buf[idx] = src[idx]; buf[idx+1] = src[idx+1]; buf[idx+2] = src[idx+2]; buf[idx+3] = 255;
+        }
+      }
+    } else if (type === 'wipeUp') {
+      const boundary = Math.round((1 - p) * height);
+      for (let py = 0; py < height; py++) {
+        for (let px = 0; px < width; px++) {
+          const idx = (py * width + px) * 4;
+          const src = py >= boundary ? toFrame : fromFrame;
+          buf[idx] = src[idx]; buf[idx+1] = src[idx+1]; buf[idx+2] = src[idx+2]; buf[idx+3] = 255;
+        }
+      }
+    } else if (type === 'flipLeft' || type === 'flipRight') {
+      // Phase 1 (p<0.5): A compresses to 0. Phase 2 (p>=0.5): B expands from 0.
+      // flipLeft: pivot on left edge. flipRight: pivot on right edge.
+      const phase2 = p >= 0.5;
+      const src = phase2 ? toFrame : fromFrame;
+      const scale = phase2 ? (2 * p - 1) : (1 - 2 * p);
+      const visW = Math.round(scale * width);
+      for (let py = 0; py < height; py++) {
+        for (let px = 0; px < width; px++) {
+          const di = (py * width + px) * 4;
+          if (visW <= 0) continue;
+          let srcX;
+          if (type === 'flipLeft') {
+            if (px >= visW) continue;
+            srcX = Math.round((px / visW) * (width - 1));
+          } else {
+            if (px < width - visW) continue;
+            srcX = Math.round(((px - (width - visW)) / visW) * (width - 1));
+          }
+          const si = (py * width + srcX) * 4;
+          buf[di] = src[si]; buf[di+1] = src[si+1]; buf[di+2] = src[si+2]; buf[di+3] = 255;
+        }
+      }
+    } else if (type === 'flipUp' || type === 'flipDown') {
+      // Phase 1 (p<0.5): A compresses to 0. Phase 2 (p>=0.5): B expands from 0.
+      // flipUp: pivot on top edge. flipDown: pivot on bottom edge.
+      const phase2 = p >= 0.5;
+      const src = phase2 ? toFrame : fromFrame;
+      const scale = phase2 ? (2 * p - 1) : (1 - 2 * p);
+      const visH = Math.round(scale * height);
+      for (let py = 0; py < height; py++) {
+        for (let px = 0; px < width; px++) {
+          const di = (py * width + px) * 4;
+          if (visH <= 0) continue;
+          let srcY;
+          if (type === 'flipUp') {
+            if (py >= visH) continue;
+            srcY = Math.round((py / visH) * (height - 1));
+          } else {
+            if (py < height - visH) continue;
+            srcY = Math.round(((py - (height - visH)) / visH) * (height - 1));
+          }
+          const si = (srcY * width + px) * 4;
+          buf[di] = src[si]; buf[di+1] = src[si+1]; buf[di+2] = src[si+2]; buf[di+3] = 255;
+        }
+      }
+    } else if (type === 'starWipe') {
+      const maxR = Math.sqrt((width / 2) ** 2 + (height / 2) ** 2) * 1.5;
+      const outerR = p * maxR;
+      const cx = width / 2;
+      const cy = height / 2;
+      for (let py = 0; py < height; py++) {
+        for (let px = 0; px < width; px++) {
+          const idx = (py * width + px) * 4;
+          const src = pointInStar5(px + 0.5, py + 0.5, cx, cy, outerR) ? toFrame : fromFrame;
+          buf[idx] = src[idx]; buf[idx+1] = src[idx+1]; buf[idx+2] = src[idx+2]; buf[idx+3] = 255;
+        }
+      }
+    } else if (type === 'dissolve') {
+      const blockSize = Math.max(2, Math.round(Math.min(width, height) / 8));
+      for (let py = 0; py < height; py++) {
+        for (let px = 0; px < width; px++) {
+          const bx = Math.floor(px / blockSize);
+          const by = Math.floor(py / blockSize);
+          const idx = (py * width + px) * 4;
+          const src = pixelHash(bx, by) < p ? toFrame : fromFrame;
+          buf[idx] = src[idx]; buf[idx+1] = src[idx+1]; buf[idx+2] = src[idx+2]; buf[idx+3] = 255;
+        }
+      }
+    } else if (type === 'checkerboard') {
+      const cellSize = Math.max(2, Math.round(Math.min(width, height) / 4));
+      for (let py = 0; py < height; py++) {
+        for (let px = 0; px < width; px++) {
+          const col = Math.floor(px / cellSize);
+          const row = Math.floor(py / cellSize);
+          const even = (col + row) % 2 === 0;
+          // Even cells open in p=[0..0.5], odd cells in p=[0.5..1].
+          const localP = even ? Math.min(1, p * 2) : Math.min(1, Math.max(0, (p - 0.5) * 2));
+          const cellCX = (col + 0.5) * cellSize;
+          const cellCY = (row + 0.5) * cellSize;
+          const halfSize = localP * cellSize * 0.5;
+          const idx = (py * width + px) * 4;
+          const inCell = Math.abs(px + 0.5 - cellCX) < halfSize && Math.abs(py + 0.5 - cellCY) < halfSize;
+          const src = inCell ? toFrame : fromFrame;
+          buf[idx] = src[idx]; buf[idx+1] = src[idx+1]; buf[idx+2] = src[idx+2]; buf[idx+3] = 255;
+        }
+      }
+    } else if (type === 'blinds') {
+      const numBlinds = Math.max(2, Math.round(height / 4));
+      const slatH = height / numBlinds;
+      for (let py = 0; py < height; py++) {
+        const localY = (py % slatH) / slatH; // 0..1 within slat
+        for (let px = 0; px < width; px++) {
+          const idx = (py * width + px) * 4;
+          const src = localY < p ? toFrame : fromFrame;
+          buf[idx] = src[idx]; buf[idx+1] = src[idx+1]; buf[idx+2] = src[idx+2]; buf[idx+3] = 255;
+        }
+      }
     }
+
     frames.push(buf);
   }
   return frames;
 }
 
 // Pre-rasterize all slides in a Deck into a flat frame sequence (including transitions).
+// Each slide's transition is its ENTRANCE: frames are inserted before the slide's content.
+//   - transition.from (if set): rasterized as the fromFrame (e.g. for the very first slide)
+//   - otherwise: the previous slide's last frame is used as fromFrame
 // Sets deck.precomputedFrames, deck.precomputedDurations, and deck.durations.
 function preRasterizeDeck(deck, root, masterDuration) {
   const { width, height } = root.resolved;
+  const rootFill = root.resolved.fill;
   const slideDataList = deck.children.map(slide =>
     rasterizeSlideContent(slide, root, masterDuration)
   );
@@ -295,21 +501,32 @@ function preRasterizeDeck(deck, root, masterDuration) {
   const allDurations = [];
 
   for (let i = 0; i < slideDataList.length; i++) {
+    const slide = deck.children[i];
     const { frames, durations } = slideDataList[i];
+
+    // Insert entrance transition BEFORE this slide's content frames.
+    if (slide.transition) {
+      let fromFrame = null;
+      if (slide.transition.from) {
+        // Caller provided an explicit from-frame (e.g. for the first slide).
+        fromFrame = rasterizeBoxToFrame(slide.transition.from, width, height, rootFill);
+      } else if (i > 0) {
+        // Default: use the previous slide's last frame.
+        const prev = slideDataList[i - 1].frames;
+        fromFrame = prev[prev.length - 1];
+      }
+
+      if (fromFrame) {
+        const transFrames = generateTransitionFrames(
+          slide.transition, fromFrame, frames[0], width, height, masterDuration,
+        );
+        allFrames.push(...transFrames);
+        allDurations.push(...Array(transFrames.length).fill(masterDuration));
+      }
+    }
+
     allFrames.push(...frames);
     allDurations.push(...durations);
-
-    const slide = deck.children[i];
-    const nextData = slideDataList[i + 1];
-    if (slide.transition && nextData) {
-      const lastFrame = frames[frames.length - 1];
-      const firstFrame = nextData.frames[0];
-      const transFrames = generateTransitionFrames(
-        slide.transition, lastFrame, firstFrame, width, height, masterDuration,
-      );
-      allFrames.push(...transFrames);
-      allDurations.push(...Array(transFrames.length).fill(masterDuration));
-    }
   }
 
   deck.precomputedFrames = allFrames;

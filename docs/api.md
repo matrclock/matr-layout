@@ -207,3 +207,93 @@ new Animation({
   ],
 })
 ```
+
+---
+
+## Slide
+
+A single slide within a `Deck`. Holds one child and specifies how long it is displayed and what transition plays when the next slide begins.
+
+### Props
+
+| Prop | Type | Default | Description |
+|------|------|---------|-------------|
+| `child` | `Box` | — | Content of the slide |
+| `duration` | `number` | `1000` | Milliseconds this slide is shown |
+| `transition` | `object` | none | Transition to the next slide (see below) |
+
+### Transition object
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `type` | `string` | Transition type (see table below) |
+| `duration` | `number` | Transition duration in milliseconds |
+
+| Type | Effect |
+|------|--------|
+| `'fade'` | Cross-fade between slides |
+| `'slideLeft'` | Current slides left, next enters from the right |
+| `'slideRight'` | Current slides right, next enters from the left |
+| `'slideUp'` | Current slides up, next enters from the bottom |
+| `'slideDown'` | Current slides down, next enters from the top |
+| `'wipeRight'` | Boundary sweeps right, revealing next slide from the left |
+| `'wipeLeft'` | Boundary sweeps left, revealing next slide from the right |
+| `'wipeDown'` | Boundary sweeps down, revealing next slide from the top |
+| `'wipeUp'` | Boundary sweeps up, revealing next slide from the bottom |
+| `'flipLeft'` | Current compresses to left edge, next expands from left edge |
+| `'flipRight'` | Current compresses to right edge, next expands from right edge |
+| `'flipUp'` | Current compresses to top edge, next expands from top edge |
+| `'flipDown'` | Current compresses to bottom edge, next expands from bottom edge |
+| `'starWipe'` | A 5-pointed star grows from the centre to reveal the next slide |
+| `'dissolve'` | Chunky random blocks dissolve from current to next |
+| `'checkerboard'` | Alternating checkerboard cells open to reveal the next slide |
+| `'blinds'` | Horizontal slats open top-to-bottom to reveal the next slide |
+
+### Example
+
+```js
+new Slide({
+  duration: 2000,
+  transition: { type: 'fade', duration: 500 },
+  child: new Box({ fill: '#ff0000' }),
+})
+```
+
+---
+
+## Deck
+
+Sequences `Slide` children into an animated presentation. Each slide is pre-rasterized; transitions between slides are baked into the frame sequence.
+
+### Props
+
+| Prop | Type | Default | Description |
+|------|------|---------|-------------|
+| `children` | `Slide[]` | `[]` | The slides, shown in order |
+
+Sizing props (`width`, `height`, `top`, `left`, `fill`) are inherited from `Box`.
+
+### Example
+
+```js
+new Deck({
+  width: 64,
+  height: 32,
+  children: [
+    new Slide({
+      duration: 1000,
+      transition: { type: 'slideLeft', duration: 300 },
+      child: new Box({ fill: '#ff0000' }),
+    }),
+    new Slide({
+      duration: 1000,
+      transition: { type: 'checkerboard', duration: 400 },
+      child: new Box({ fill: '#0000ff' }),
+    }),
+    new Slide({
+      duration: 1000,
+      child: new Box({ fill: '#00ff00' }),
+    }),
+  ],
+})
+```
