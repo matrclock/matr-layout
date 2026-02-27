@@ -12,7 +12,7 @@ const SEP_H = 1;
 const BODY_H = CANVAS_H - HEADER_H - SEP_H; // 22
 
 const BOX_SIZE = 5;
-const FPS = 20;
+const FPS = 10;
 const DURATION_S = 5;
 const FRAME_COUNT = FPS * DURATION_S; // 100
 const FRAME_MS = 1000 / FPS;          // 50ms per frame
@@ -38,16 +38,23 @@ function buildBouncingFrames() {
 
     frames.push(
       new Box({
+        width: BOX_SIZE,
+        height: BOX_SIZE,
+        left: Math.round(bx),
+        top: Math.round(by),
         children: [
+        new Animation({ duration: 100, children: [
           new Box({
-            fill: '#ff0000',
-            width: BOX_SIZE,
-            height: BOX_SIZE,
-            left: Math.round(bx),
-            top: Math.round(by),
+            fill: '#ffffff',
           }),
-        ],
+          new Box({
+            fill: '#cc6666',
+          }),
+      ] }),
+        ]
       }),
+      
+
     );
   }
   return frames;
