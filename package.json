@@ -1,7 +1,9 @@
 {
   "name": "matr-layout",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "type": "module",
+  "main": "./src/index.js",
+  "exports": "./src/index.js",
   "scripts": {
     "dev": "node server/devServer.js",
     "clidev": "node --watch server/cliDev.js",
@@ -9,5 +11,8 @@
   },
   "devDependencies": {
     "eslint": "^9.0.0"
+  },
+  "dependencies": {
+    "gifwrap": "^0.10.1"
   }
 }

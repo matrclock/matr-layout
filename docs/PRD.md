@@ -181,3 +181,12 @@ Thin renderer modules read the flat buffer and display it. They have no knowledg
 | --- | --- | --- |
 | **Canvas** | `src/render/canvasRenderer.js` | Each pixel drawn as a filled circle at 20× scale on an HTML Canvas |
 | **Terminal** | `src/render/terminalRenderer.js` | Each pixel emitted as an ANSI true-colour `●` character |
+| **GIF** | `root.toGifFrames()` on `Root` | Returns a `GifFrame[]` (gifwrap) covering all animation frames |
+
+### GIF Export
+
+`Root.toGifFrames()` is the primary export path for producing animated GIFs. It bundles all three pipeline stages and the frame conversion into a single call:
+
+1. Runs stages 1–2 internally (style → dimension → coordinate → rasterize).
+2. Converts each `Uint8Array` frame into a `gifwrap` `GifFrame` with `delayCentisecs` derived from the animation `duration` props (ms ÷ 10, defaulting to 100cs for static scenes).
+3. Returns the array for the caller to write with `GifUtil.write`.

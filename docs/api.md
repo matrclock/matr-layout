@@ -48,6 +48,22 @@ The top-level container. Defines the canvas size. Every scene must start with a 
 
 Inherits all `Box` props. `width` and `height` are **required**.
 
+### Methods
+
+#### `root.toGifFrames() → GifFrame[]`
+
+Runs the full layout pipeline (style resolution → dimension resolution → coordinate resolution → rasterization) and returns an array of [`gifwrap`](https://www.npmjs.com/package/gifwrap) `GifFrame` objects ready to write with `GifUtil.write`.
+
+Static scenes produce a single frame with a 1-second delay. Animated scenes produce one frame per animation step with delays derived from the `duration` props.
+
+```js
+import { GifUtil } from 'gifwrap';
+
+const root = new Root({ width: 64, height: 32, children: [ /* ... */ ] });
+const gifFrames = root.toGifFrames();
+await GifUtil.write('output.gif', gifFrames);
+```
+
 ### Example
 
 ```js
