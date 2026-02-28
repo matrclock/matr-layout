@@ -1,7 +1,9 @@
+import { Box } from '../core/Box.js';
 import { Text } from '../core/Text.js';
 import { Padding } from '../core/Padding.js';
 import { Animation } from '../core/Animation.js';
 import { Deck } from '../core/Deck.js';
+import { Slide } from '../core/Slide.js';
 import { Raster } from '../core/Raster.js';
 import { getFont, getFontCellHeight, getTextWidth, layoutText, renderGlyph, parseColor } from '../font/glyphFont.js';
 import { resolveBox } from '../layout/dimensionResolver.js';
@@ -10,33 +12,31 @@ import { positionTree } from '../layout/coordinateResolver.js';
 import { fillRect, intersectClip } from './primitives.js';
 import { generateTransitionFrames } from './transitions/index.js';
 
-function paintDeck(box, buf, clip) {
-  const { x, y, width, height } = box.resolved;
-  if (box.precomputedFrames) {
-    const frameIdx = box.activeFrame % Math.max(1, box.precomputedFrames.length);
-    const frameData = box.precomputedFrames[frameIdx];
-    if (frameData) {
-      for (let py = 0; py < height; py++) {
-        for (let px = 0; px < width; px++) {
-          const cx = x + px;
-          const cy = y + py;
-          if (cx < clip.x || cx >= clip.x + clip.width) continue;
-          if (cy < clip.y || cy >= clip.y + clip.height) continue;
-          if (cx < 0 || cx >= buf.width || cy < 0 || cy >= buf.height) continue;
-          const si = (py * width + px) * 4;
-          const di = (cy * buf.width + cx) * 4;
-          buf.data[di]     = frameData[si];
-          buf.data[di + 1] = frameData[si + 1];
-          buf.data[di + 2] = frameData[si + 2];
-          buf.data[di + 3] = frameData[si + 3];
-        }
-      }
-    }
-    return;
+class RasterFrame extends Box {
+  constructor(data, width, height) {
+    super({ width, height });
+    this.data = data; // Uint8Array RGBA
+    this.resolved.width = width;
+    this.resolved.height = height;
   }
-  // Not pre-rasterized: show active slide child.
-  const child = box.children[box.activeFrame % Math.max(1, box.children.length)];
-  if (child) paint(child, buf, clip);
+}
+
+function paintRasterFrame(box, buf, clip) {
+  const { x, y, width, height } = box.resolved;
+  for (let py = 0; py < height; py++) {
+    for (let px = 0; px < width; px++) {
+      const cx = x + px, cy = y + py;
+      if (cx < clip.x || cx >= clip.x + clip.width) continue;
+      if (cy < clip.y || cy >= clip.y + clip.height) continue;
+      if (cx < 0 || cx >= buf.width || cy < 0 || cy >= buf.height) continue;
+      const si = (py * width + px) * 4;
+      const di = (cy * buf.width + cx) * 4;
+      buf.data[di]     = box.data[si];
+      buf.data[di + 1] = box.data[si + 1];
+      buf.data[di + 2] = box.data[si + 2];
+      buf.data[di + 3] = box.data[si + 3];
+    }
+  }
 }
 
 function paintAnimation(box, buf, clip) {
@@ -109,8 +109,9 @@ function paint(box, buf, parentClip) {
 
   if (clip.width <= 0 || clip.height <= 0) return;
 
-  if (box instanceof Deck)                          return paintDeck(box, buf, clip);
+  if (box instanceof RasterFrame)                   return paintRasterFrame(box, buf, clip);
   if (box instanceof Animation)                     return paintAnimation(box, buf, clip);
+  if (box instanceof Slide && box.children[0] instanceof RasterFrame) return paintAnimation(box, buf, clip);
   if (box instanceof Padding)                       return paintPadding(box, buf, clip);
   if (box instanceof Raster && box.pixels !== null) return paintRaster(box, buf, clip);
 
@@ -142,13 +143,13 @@ export function rasterize(root) {
   return buf.data;
 }
 
-// After pre-rasterization, skip recursing into a Deck's slide subtree.
+// After pre-rasterization, skip recursing into a Deck's RasterFrame children.
 function collectAnimations(root) {
   const list = [];
   function walk(box) {
-    if (box instanceof Animation || box instanceof Deck) {
+    if (box instanceof Animation) {
       list.push(box);
-      if (box instanceof Deck && box.precomputedFrames) return;
+      if (box instanceof Deck) return; // children are RasterFrames, nothing to walk
     }
     for (const child of box.children) walk(child);
   }
@@ -172,6 +173,39 @@ function getActiveFrame(anim, t) {
   return anim.durations.length - 1;
 }
 
+// Pre-rasterize a bare Slide's transition (not in a Deck) into a RasterFrame sequence.
+// Generates transition frames followed by content frames that fill the outer slide's duration.
+function preRasterizeBareSlide(innerSlide, outerDuration, root, masterDuration) {
+  const { width, height } = root.resolved;
+  const rootFill = root.resolved.fill;
+  const clip = { x: 0, y: 0, width, height };
+
+  const toBuf = { data: new Uint8Array(width * height * 4), width, height };
+  if (rootFill) {
+    const [r, g, b] = parseColor(rootFill);
+    fillRect(toBuf, 0, 0, width, height, r, g, b, clip);
+  }
+  if (innerSlide.children[0]) paint(innerSlide.children[0], toBuf, clip);
+  const toFrame = toBuf.data;
+
+  const fromFrame = rasterizeBoxToFrame(innerSlide.transition.from, width, height, rootFill);
+  const transFrames = generateTransitionFrames(
+    innerSlide.transition, fromFrame, toFrame, width, height, masterDuration,
+  );
+
+  const allFrames = [...transFrames];
+  const allDurations = Array(transFrames.length).fill(masterDuration);
+
+  const transMs = transFrames.length * masterDuration;
+  const contentCount = Math.max(1, Math.round((outerDuration - transMs) / masterDuration));
+  for (let i = 0; i < contentCount; i++) allFrames.push(toFrame);
+  allDurations.push(...Array(contentCount).fill(masterDuration));
+
+  innerSlide.children = allFrames.map(f => new RasterFrame(f, width, height));
+  innerSlide.durations = allDurations;
+  innerSlide.activeFrame = 0;
+}
+
 // Rasterize a slide's content into a fixed-length frame sequence at masterDuration resolution.
 function rasterizeSlideContent(slide, root, masterDuration) {
   const { width, height } = root.resolved;
@@ -189,10 +223,18 @@ function rasterizeSlideContent(slide, root, masterDuration) {
     return buf.data;
   }
 
-  // Collect Animation nodes within the slide subtree.
+  // Collect animated nodes within the slide subtree.
+  // Bare Slides with a `transition.from` are pre-rasterized in place and treated as animations.
   const animations = [];
   function walkSlide(box) {
-    if (box instanceof Animation) animations.push(box);
+    if (box instanceof Animation) {
+      animations.push(box);
+      if (box instanceof Deck) return; // children are RasterFrames after pre-rasterization
+    } else if (box instanceof Slide && box.transition?.from) {
+      preRasterizeBareSlide(box, slide.duration, root, masterDuration);
+      animations.push(box);
+      return; // children are now RasterFrames
+    }
     for (const c of box.children) walkSlide(c);
   }
   if (slide.children[0]) walkSlide(slide.children[0]);
@@ -280,8 +322,7 @@ function preRasterizeDeck(deck, root, masterDuration) {
     allDurations.push(...durations);
   }
 
-  deck.precomputedFrames = allFrames;
-  deck.precomputedDurations = allDurations;
+  deck.children = allFrames.map(f => new RasterFrame(f, width, height));
   deck.durations = allDurations;
 }
 
@@ -310,9 +351,9 @@ export function rasterizeFrames(root) {
   const animDurations = allAnims.flatMap(a => a.durations);
   const masterDuration = animDurations.length > 0 ? Math.min(...animDurations) : 50;
 
-  // Pass 2: pre-rasterize all Decks into flat frame sequences.
-  for (const deck of decks) {
-    preRasterizeDeck(deck, root, masterDuration);
+  // Pass 2: pre-rasterize all Decks into flat frame sequences (inner-first).
+  for (let i = decks.length - 1; i >= 0; i--) {
+    preRasterizeDeck(decks[i], root, masterDuration);
   }
 
   // Pass 3: standard frame loop (collectAnimations skips pre-rasterized Deck subtrees).

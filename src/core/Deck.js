@@ -1,7 +1,7 @@
-import { Box } from './Box.js';
+import { Animation } from './Animation.js';
 import { Slide } from './Slide.js';
 
-export class Deck extends Box {
+export class Deck extends Animation {
   static ownProps = new Set(['children']);
 
   constructor(props = {}) {

@@ -137,50 +137,76 @@ export function buildScene() {
             }),
           }),
 
-          // Slide 2 — enters via slideLeft; exits via wipeRight
-          // Body: blue gradient columns (left=dark → right=bright)
-          demoSlide({
-            label: 'slideLeft',
-            accent: '#3399FF',
+          // Slide 2 — enters via slideLeft; body is a bare embedded Slide (not in a Deck)
+          // The inner Slide carries a transition from a blue box, but has no Deck to drive it.
+          new Slide({
+            duration: 3000,
             transition: { type: 'slideLeft', duration: TRANS_MS },
-            body: new Row({
+            child:  new Column({
               children: [
-                new Box({ fill: '#061a40' }),
-                new Box({ fill: '#0d3d80' }),
-                new Box({ fill: '#1a6acc' }),
-                new Box({ fill: '#3399FF' }),
-              ],
+                new Row({
+                  height: HEADER_H,
+                  fill: '#111111',
+                  children: [
+                    new Text({ font: 'Tiny5-Bold', content: 'embed slide', color: '#4488ff' }),
+                  ],
+                }),
+
+                new Row({
+                  children: [
+                    new Slide({
+                      transition: { from: new Box({ fill: '#1a44cc' }), type: 'slideRight', duration: TRANS_MS },
+                      child: new Box({ fill: '#cc6666' }),
+                    }),
+                    new Slide({
+                      transition: { from: new Box({ fill: '#1a44cc' }), type: 'slideDown', duration: 500 },
+                      child: new Box({ fill: '#FFDE21' }),
+                    }),
+                    new Box({ fill: '#00ccff' }),
+                  ],
+                }),
+                ],
             }),
           }),
+          
 
-          // Slide 3 — enters via wipeRight; exits via wipeUp
-          // Body: hot pink left half, dark right half
+          // Slide 3 — enters via slideLeft; body is a nested Deck of 2 slides
+          // Inner slide A: cyan | purple halves
+          // Inner slide B: gold | dark halves, enters via slideLeft
           demoSlide({
-            label: 'wipeRight',
-            accent: '#FF3385',
-            transition: { type: 'wipeRight', duration: TRANS_MS },
-            body: new Row({
+            label: 'nested',
+            accent: '#8b5cf6',
+            duration: 4200,
+            transition: { type: 'slideLeft', duration: TRANS_MS },
+            body: new Deck({
               children: [
-                new Box({ width: 32, fill: '#FF3385' }),
-                new Box({ fill: '#1a0010' }),
-              ],
-            }),
-          }),
-
-          // Slide 4 — enters via wipeUp; exits via starWipe
-          // Body: teal gradient bands (top=dark → bottom=bright)
-          demoSlide({
-            label: 'wipeUp',
-            accent: '#00FFCC',
-            transition: { type: 'wipeUp', duration: TRANS_MS },
-            body: new Column({
-              children: [
-                new Box({ height: 4, fill: '#001a14' }),
-                new Box({ height: 4, fill: '#003d2e' }),
-                new Box({ height: 4, fill: '#006650' }),
-                new Box({ height: 4, fill: '#009973' }),
-                new Box({ height: 4, fill: '#00cc99' }),
-                new Box({ fill: '#00FFCC' }),
+                new Slide({
+                  duration: 1800,
+                  child: new Row({
+                    children: [
+                      new Box({ fill: '#06b6d4', children: [
+                        new Box({ top: 3, children: [new Text({ font: '9x15B', content: '1', color: '#003344', align: 'center' })] }),
+                      ]}),
+                      new Box({ fill: '#a855f7', children: [
+                        new Box({ top: 3, children: [new Text({ font: '9x15B', content: '2', color: '#ffffff', align: 'center' })] }),
+                      ]}),
+                    ],
+                  }),
+                }),
+                new Slide({
+                  duration: 1800,
+                  transition: { type: 'slideLeft', duration: TRANS_MS },
+                  child: new Row({
+                    children: [
+                      new Box({ fill: '#FFD700', children: [
+                        new Box({ top: 3, children: [new Text({ font: '9x15B', content: '3', color: '#1a0d00', align: 'center' })] }),
+                      ]}),
+                      new Box({ fill: '#cc6666', children: [
+                        new Box({ top: 3, children: [new Text({ font: '9x15B', content: '4', color: '#ffffff', align: 'center' })] }),
+                      ]}),
+                    ],
+                  }),
+                }),
               ],
             }),
           }),
@@ -256,46 +282,6 @@ export function buildScene() {
             }),
           }),
 
-          // Slide 7 — enters via checkerboard; exits via blinds
-          // Body: manual purple/dark checkerboard
-          demoSlide({
-            label: 'checkerboard',
-            accent: '#a855f7',
-            transition: { type: 'checkerboard', duration: TRANS_MS },
-            body: (() => {
-              const rows = [];
-              for (let r = 0; r < 5; r++) {
-                const cells = [];
-                for (let c = 0; c < 8; c++) {
-                  cells.push(new Box({ fill: (r + c) % 2 === 0 ? '#a855f7' : '#1a0033' }));
-                }
-                rows.push(new Row({ height: r < 4 ? 4 : BODY_H - 16, children: cells }));
-              }
-              return new Column({ children: rows });
-            })(),
-          }),
-
-          // Slide 8 — enters via blinds; exits via flipLeft
-          // Body: green slats on black (echoes the blinds effect)
-          demoSlide({
-            label: 'blinds',
-            accent: '#84cc16',
-            transition: { type: 'blinds', duration: TRANS_MS },
-            body: new Column({
-              children: [
-                new Box({ height: 4, fill: '#84cc16' }),
-                new Box({ height: 1, fill: '#000000' }),
-                new Box({ height: 4, fill: '#84cc16' }),
-                new Box({ height: 1, fill: '#000000' }),
-                new Box({ height: 4, fill: '#84cc16' }),
-                new Box({ height: 1, fill: '#000000' }),
-                new Box({ height: 4, fill: '#84cc16' }),
-                new Box({ height: 1, fill: '#000000' }),
-                new Box({ fill: '#84cc16' }),
-              ],
-            }),
-          }),
-
           // Slide 9 — enters via flipLeft; exits via flipUp
           // Body: red gradient left→right (bright→dark, like a page folding away)
           demoSlide({
@@ -312,33 +298,6 @@ export function buildScene() {
             }),
           }),
 
-          // Slide 10 — enters via flipUp; exits via slideRight
-          // Body: amber gradient top→bottom (bright→dark)
-          demoSlide({
-            label: 'flipUp',
-            accent: '#f59e0b',
-            transition: { type: 'flipUp', duration: TRANS_MS },
-            body: new Column({
-              children: [
-                new Box({ height: 5, fill: '#f59e0b' }),
-                new Box({ height: 5, fill: '#b45309' }),
-                new Box({ height: 5, fill: '#78350f' }),
-                new Box({ fill: '#1a0d00' }),
-              ],
-            }),
-          }),
-
-          // Slide 11 — enters via slideRight; exits via slideDown
-          // Body: rainbow vertical columns
-          demoSlide({
-            label: 'slideRight',
-            accent: '#8b5cf6',
-            transition: { type: 'slideRight', duration: TRANS_MS },
-            body: new Row({
-              children: colors.map(c => new Box({ fill: c })),
-            }),
-          }),
-
           // Slide 12 — enters via slideDown; no exit transition (loops cut to slide 1's fade-in)
           // Body: rainbow horizontal bands
           demoSlide({
@@ -349,6 +308,7 @@ export function buildScene() {
               children: colors.map(c => new Box({ fill: c })),
             }),
           }),
+          
 
         ],
       }),
