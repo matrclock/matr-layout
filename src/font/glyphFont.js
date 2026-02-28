@@ -111,7 +111,7 @@ export function getFontCellHeight(font) {
 }
 
 function getGlyphAdvance(glyph) {
-  return glyph.width + 1;
+  return glyph.width + (glyph.xOffset || 0) + 1;
 }
 
 /** Total pixel width of a string in a given font (no trailing gap). */
