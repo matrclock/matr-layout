@@ -188,7 +188,7 @@ function preRasterizeBareSlide(innerSlide, outerDuration, root, masterDuration) 
   if (innerSlide.children[0]) paint(innerSlide.children[0], toBuf, clip);
   const toFrame = toBuf.data;
 
-  const fromFrame = rasterizeBoxToFrame(innerSlide.transition.from, width, height, rootFill);
+  const fromFrame = rasterizeBoxToFrame(innerSlide.transition.from ?? new Box(), width, height, rootFill);
   const transFrames = generateTransitionFrames(
     innerSlide.transition, fromFrame, toFrame, width, height, masterDuration,
   );
@@ -224,13 +224,14 @@ function rasterizeSlideContent(slide, root, masterDuration) {
   }
 
   // Collect animated nodes within the slide subtree.
-  // Bare Slides with a `transition.from` are pre-rasterized in place and treated as animations.
+  // Bare Slides with a transition are pre-rasterized in place and treated as animations.
+  // `transition.from` defaults to new Box() (transparent) if not specified.
   const animations = [];
   function walkSlide(box) {
     if (box instanceof Animation) {
       animations.push(box);
       if (box instanceof Deck) return; // children are RasterFrames after pre-rasterization
-    } else if (box instanceof Slide && box.transition?.from) {
+    } else if (box instanceof Slide && box.transition) {
       preRasterizeBareSlide(box, slide.duration, root, masterDuration);
       animations.push(box);
       return; // children are now RasterFrames

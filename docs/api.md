@@ -228,22 +228,50 @@ new Animation({
 
 ## Slide
 
-A single slide within a `Deck`. Holds one child and specifies how long it is displayed and what transition plays when the next slide begins.
+Holds one child and controls how long it is displayed and what transition plays on entry. Slides are normally children of a `Deck`, but can also appear anywhere in the layout tree — the transition plays once at the start of the enclosing slide's display time, fading in from a transparent frame by default.
 
 ### Props
 
 | Prop | Type | Default | Description |
 |------|------|---------|-------------|
 | `child` | `Box` | — | Content of the slide |
-| `duration` | `number` | `1000` | Milliseconds this slide is shown |
-| `transition` | `object` | none | Transition to the next slide (see below) |
+| `duration` | `number` | `1000` | Milliseconds this slide is shown (only meaningful inside a `Deck`) |
+| `transition` | `object` | none | Transition played on entry (see below) |
 
 ### Transition object
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `type` | `string` | Transition type (see table below) |
-| `duration` | `number` | Transition duration in milliseconds |
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `type` | `string` | — | Transition type (see table below) |
+| `duration` | `number` | — | How long the transition animation runs, in milliseconds |
+| `delay` | `number` | `0` | Milliseconds to hold the `from` frame before the transition starts |
+| `from` | `Box` | `new Box()` | Scene to transition from. Defaults to a transparent `Box`. Inside a `Deck` this default is overwritten with the previous slide's last frame |
+
+#### `duration`
+
+Controls how long the moving part of the transition takes. The total time before the slide's content is fully visible is `delay + duration`.
+
+#### `delay`
+
+A convenience for simple cases: holds the outgoing frame frozen for the given number of milliseconds before the animation begins.
+
+> **Note:** `delay` works well for static content. When the content you are transitioning *from* is itself animated (an `Animation` node, a nested `Deck`, etc.), the held frame is a single frozen snapshot, not a live animation. In that situation, wrap the animated content in a `Slide` with an appropriate `duration` instead:
+>
+> ```js
+> // Instead of delay, give the animated component its own Slide
+> new Deck({
+>   children: [
+>     new Slide({
+>       duration: 2000,          // animated content plays for 2 s
+>       child: new Animation({ /* ... */ }),
+>     }),
+>     new Slide({
+>       transition: { type: 'fade', duration: 500 },   // no delay needed
+>       child: new Box({ fill: '#0000ff' }),
+>     }),
+>   ],
+> })
+> ```
 
 | Type | Effect |
 |------|--------|
@@ -265,12 +293,32 @@ A single slide within a `Deck`. Holds one child and specifies how long it is dis
 | `'checkerboard'` | Alternating checkerboard cells open to reveal the next slide |
 | `'blinds'` | Horizontal slats open top-to-bottom to reveal the next slide |
 
-### Example
+### Examples
 
 ```js
+// Inside a Deck — transition from the previous slide
 new Slide({
   duration: 2000,
   transition: { type: 'fade', duration: 500 },
+  child: new Box({ fill: '#ff0000' }),
+})
+
+// Inside a Deck — hold for 300 ms then wipe in
+new Slide({
+  duration: 2000,
+  transition: { type: 'wipeRight', duration: 400, delay: 300 },
+  child: new Box({ fill: '#ff0000' }),
+})
+
+// Bare (not in a Deck) — transition plays once at the start; from defaults to transparent
+new Slide({
+  transition: { type: 'slideRight', duration: 600 },
+  child: new Box({ fill: '#ff0000' }),
+})
+
+// Bare with an explicit from frame
+new Slide({
+  transition: { from: new Box({ fill: '#000000' }), type: 'slideRight', duration: 600 },
   child: new Box({ fill: '#ff0000' }),
 })
 ```

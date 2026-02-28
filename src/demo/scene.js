@@ -121,8 +121,8 @@ export function buildScene() {
                 new Row({
                   height: HEADER_H,
                   children: [
-                    new Text({ font: 'Tiny5-Bold', content: 'matr', color: '#ffffff' }),
-                    new Text({ align: 'end', content: 'v0.0.1', color: '#ffffff' }),
+                    new Text({ font: 'Tiny5-Bold', content: 'animation', color: '#ffffff' }),
+                    //new Text({ align: 'end', content: 'v0.0.1', color: '#ffffff' }),
                   ],
                 }),
                 new Box({
@@ -148,21 +148,24 @@ export function buildScene() {
                   height: HEADER_H,
                   fill: '#111111',
                   children: [
-                    new Text({ font: 'Tiny5-Bold', content: 'embed slide', color: '#4488ff' }),
+                    new Text({ font: 'Tiny5-Bold', content: 'Solo Slides', color: '#4488ff' }),
                   ],
                 }),
 
                 new Row({
                   children: [
                     new Slide({
-                      transition: { from: new Box({ fill: '#1a44cc' }), type: 'slideRight', duration: TRANS_MS },
+                      transition: {type: 'slideRight', duration: TRANS_MS },
                       child: new Box({ fill: '#cc6666' }),
                     }),
                     new Slide({
-                      transition: { from: new Box({ fill: '#1a44cc' }), type: 'slideDown', duration: 500 },
+                      transition: { from: new Box({ fill: '#1a44cc' }), type: 'slideDown', duration: 500, delay: 500 },
                       child: new Box({ fill: '#FFDE21' }),
                     }),
-                    new Box({ fill: '#00ccff' }),
+                    new Slide({
+                      transition: { from: new Box({ fill: '#00ccff' }), type: 'dissolve', duration: 500, delay: 1000 },
+                       child: new Box(),
+                    }),
                   ],
                 }),
                 ],
@@ -174,14 +177,14 @@ export function buildScene() {
           // Inner slide A: cyan | purple halves
           // Inner slide B: gold | dark halves, enters via slideLeft
           demoSlide({
-            label: 'nested',
+            label: 'nested decks',
             accent: '#8b5cf6',
-            duration: 4200,
+            duration: 3000,
             transition: { type: 'slideLeft', duration: TRANS_MS },
             body: new Deck({
               children: [
                 new Slide({
-                  duration: 1800,
+                  duration: 1000,
                   child: new Row({
                     children: [
                       new Box({ fill: '#06b6d4', children: [

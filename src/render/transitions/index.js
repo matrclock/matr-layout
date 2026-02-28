@@ -25,12 +25,14 @@ const TRANSITION_HANDLERS = {
 };
 
 export function generateTransitionFrames(transition, fromFrame, toFrame, width, height, masterDuration) {
-  const frameCount = Math.max(1, Math.round(transition.duration / masterDuration));
+  const delayFrames = Math.round((transition.delay ?? 0) / masterDuration);
+  const transFrames = Math.max(1, Math.round(transition.duration / masterDuration));
   const handler = TRANSITION_HANDLERS[transition.type];
   if (!handler) return [];
   const frames = [];
-  for (let i = 0; i < frameCount; i++) {
-    const p = (i + 1) / frameCount; // 0 < p <= 1
+  for (let i = 0; i < delayFrames; i++) frames.push(fromFrame);
+  for (let i = 0; i < transFrames; i++) {
+    const p = (i + 1) / transFrames; // 0 < p <= 1
     const buf = new Uint8Array(width * height * 4);
     handler(buf, fromFrame, toFrame, width, height, p);
     frames.push(buf);
