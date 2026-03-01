@@ -143,13 +143,17 @@ export function rasterize(root) {
   return buf.data;
 }
 
-// After pre-rasterization, skip recursing into a Deck's RasterFrame children.
+// After pre-rasterization, collect all animation drivers.
+// Stops at Decks and pre-rasterized Slides (children are RasterFrames, nothing to recurse into).
 function collectAnimations(root) {
   const list = [];
   function walk(box) {
     if (box instanceof Animation) {
       list.push(box);
-      if (box instanceof Deck) return; // children are RasterFrames, nothing to walk
+      if (box instanceof Deck) return;
+    } else if (box instanceof Slide && box.children[0] instanceof RasterFrame) {
+      list.push(box);
+      return;
     }
     for (const child of box.children) walk(child);
   }
@@ -337,14 +341,16 @@ export function rasterizeFrames(root) {
   // Pass 1: walk the entire tree (including slide subtrees) to find all Animations and Decks.
   const allAnims = [];
   const decks = [];
-  function walkAll(box) {
-    if (box instanceof Deck) decks.push(box);
+  const bareSlides = []; // top-level Slides with transitions (outside any Deck)
+  function walkAll(box, insideDeck = false) {
+    if (box instanceof Deck) { decks.push(box); insideDeck = true; }
     else if (box instanceof Animation) allAnims.push(box);
-    for (const child of box.children) walkAll(child);
+    else if (!insideDeck && box instanceof Slide && box.transition) bareSlides.push(box);
+    for (const child of box.children) walkAll(child, insideDeck);
   }
   walkAll(root);
 
-  if (allAnims.length === 0 && decks.length === 0) {
+  if (allAnims.length === 0 && decks.length === 0 && bareSlides.length === 0) {
     return { frames: [rasterize(root)], durations: [] };
   }
 
@@ -352,7 +358,12 @@ export function rasterizeFrames(root) {
   const animDurations = allAnims.flatMap(a => a.durations);
   const masterDuration = animDurations.length > 0 ? Math.min(...animDurations) : 50;
 
-  // Pass 2: pre-rasterize all Decks into flat frame sequences (inner-first).
+  // Pass 2a: pre-rasterize top-level bare Slides (outside any Deck).
+  for (const slide of bareSlides) {
+    preRasterizeBareSlide(slide, slide.duration, root, masterDuration);
+  }
+
+  // Pass 2b: pre-rasterize all Decks into flat frame sequences (inner-first).
   for (let i = decks.length - 1; i >= 0; i--) {
     preRasterizeDeck(decks[i], root, masterDuration);
   }

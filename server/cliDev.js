@@ -1,9 +1,11 @@
-import { buildScene } from '../src/demo/scene.js';
 import { resolveStyles } from '../src/style/StyleContext.js';
 import { resolveTree } from '../src/layout/dimensionResolver.js';
 import { positionTree } from '../src/layout/coordinateResolver.js';
 import { rasterizeFrames } from '../src/render/rasterizer.js';
 import { renderBufferToTerminal } from '../src/render/terminalRenderer.js';
+
+const sceneName = process.argv[2] ?? 'scene';
+const { buildScene } = await import(`../src/demo/${sceneName}.js`);
 
 process.stdout.write('\x1b[?25l');
 
