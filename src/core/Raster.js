@@ -1,10 +1,10 @@
 import { Box } from './Box.js';
 
 export class Raster extends Box {
-  static ownProps = new Set(['pixels', 'child']);
+  static ownProps = new Set(['pixels', 'rawData', 'child']);
 
   constructor(props = {}) {
-    const { pixels = null, child = null } = props;
+    const { pixels = null, rawData = null, child = null } = props;
 
     let derivedWidth = props.width;
     let derivedHeight = props.height;
@@ -25,5 +25,6 @@ export class Raster extends Box {
 
     super({ ...props, width: derivedWidth, height: derivedHeight, children: child ? [child] : [] });
     this.pixels = pixels;
+    this.rawData = rawData;
   }
 }

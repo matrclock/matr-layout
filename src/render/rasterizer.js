@@ -5,6 +5,7 @@ import { Animation } from '../core/Animation.js';
 import { Deck } from '../core/Deck.js';
 import { Slide } from '../core/Slide.js';
 import { Raster } from '../core/Raster.js';
+import { Image } from '../core/Image.js';
 import { getFont, getFontCellHeight, getTextWidth, layoutText, renderGlyph, parseColor } from '../font/glyphFont.js';
 import { resolveBox } from '../layout/dimensionResolver.js';
 import { resolveStyles, StyleContext } from '../style/StyleContext.js';
@@ -56,6 +57,26 @@ function paintPadding(box, buf, clip) {
   }
   for (const child of box.children) {
     paint(child, buf, clip);
+  }
+}
+
+function paintImage(box, buf, clip) {
+  const { x, y, width, height } = box.resolved;
+  for (let py = 0; py < height; py++) {
+    for (let px = 0; px < width; px++) {
+      const cx = x + px, cy = y + py;
+      if (cx < clip.x || cx >= clip.x + clip.width) continue;
+      if (cy < clip.y || cy >= clip.y + clip.height) continue;
+      if (cx < 0 || cx >= buf.width || cy < 0 || cy >= buf.height) continue;
+      const si = (py * width + px) * 4;
+      const alpha = box.rawData[si + 3];
+      if (alpha === 0) continue;
+      const di = (cy * buf.width + cx) * 4;
+      buf.data[di]     = box.rawData[si];
+      buf.data[di + 1] = box.rawData[si + 1];
+      buf.data[di + 2] = box.rawData[si + 2];
+      buf.data[di + 3] = box.rawData[si + 3];
+    }
   }
 }
 
@@ -113,6 +134,8 @@ function paint(box, buf, parentClip) {
   if (box instanceof Animation)                     return paintAnimation(box, buf, clip);
   if (box instanceof Slide && box.children[0] instanceof RasterFrame) return paintAnimation(box, buf, clip);
   if (box instanceof Padding)                       return paintPadding(box, buf, clip);
+  if (box instanceof Image && box.rawData !== null) return paintImage(box, buf, clip);
+  if (box instanceof Raster && box.rawData !== null) return paintImage(box, buf, clip);
   if (box instanceof Raster && box.pixels !== null) return paintRaster(box, buf, clip);
 
   if (fill !== null) {
@@ -344,7 +367,7 @@ export function rasterizeFrames(root) {
   const bareSlides = []; // top-level Slides with transitions (outside any Deck)
   function walkAll(box, insideDeck = false) {
     if (box instanceof Deck) { decks.push(box); insideDeck = true; }
-    else if (box instanceof Animation) allAnims.push(box);
+    else if (!insideDeck && box instanceof Animation) allAnims.push(box);
     else if (!insideDeck && box instanceof Slide && box.transition) bareSlides.push(box);
     for (const child of box.children) walkAll(child, insideDeck);
   }

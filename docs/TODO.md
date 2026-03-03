@@ -1,7 +1,8 @@
 # TODO List
 These are tasks yet to be done. Work on them from top to bottom, confirm when you start working on one and are finished. I'll tell you if you've completed it and only then will you remove it from the list.
 
-## 1. Slides without a Deck
-Slides, and their associated transitions, should be able to be used without a Deck.
+## 1. Converting static images to Raster
+Add an image component that can scale and convert pngs and jpegs to Rasters. Feel free to use a node library for this.
 
-Are Decks too special? Should more of the resolving and animation logic be moved into Slide?
+## 2. Converting animated gifs
+Add a Gif component that can scale and convert animated gifs for display

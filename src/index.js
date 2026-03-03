@@ -6,5 +6,7 @@ export { Text } from './core/Text.js';
 export { Padding } from './core/Padding.js';
 export { Animation } from './core/Animation.js';
 export { Raster } from './core/Raster.js';
+export { Image } from './core/Image.js';
 export { Slide } from './core/Slide.js';
 export { Deck } from './core/Deck.js';
+export { generateTransitionFrames } from './render/transitions/index.js';

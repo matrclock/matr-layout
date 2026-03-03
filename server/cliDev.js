@@ -9,7 +9,7 @@ const { buildScene } = await import(`../src/demo/${sceneName}.js`);
 
 process.stdout.write('\x1b[?25l');
 
-const root = buildScene();
+const root = await buildScene();
 resolveStyles(root);
 resolveTree(root);
 positionTree(root);

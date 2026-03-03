@@ -13,6 +13,8 @@
     "eslint": "^9.0.0"
   },
   "dependencies": {
-    "gifwrap": "^0.10.1"
+    "gifwrap": "^0.10.1",
+    "jpeg-js": "^0.4.4",
+    "pngjs": "^7.0.0"
   }
 }
